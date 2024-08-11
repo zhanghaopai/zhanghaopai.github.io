@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <link rel="shortcut icon" href="http://some.url/to/favicon.ico">
+    <title>Quick Start of LoRA-Patrick's Blogs</title>
+
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/academicons/1.8.6/css/academicons.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.9.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/katex.min.css">
+    
+
+    
+<link rel="stylesheet" href="/css/adagio.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+<body>
+    <div class="container-fluid">
+    <nav class="nav">
+        <div class="collapse navbar-collapse" id="navbar-sm">
+            
+        </div>
+    </nav>
+</div>
+
+<div class="d-flex d-md-none" style="width: 100%; background-color: #e9ecef">
+    
+    <nav class="navbar ml-auto">
+        <a class="navbar-brand" href="/">
+            
+            Patrick
+            
+        </a>
+    </nav>
+</div>
+
+
+<div class="container d-none d-md-block my-navbar">
+    <nav class="navbar navbar-expand-sm navbar-light bg-transparent">
+        <a class="navbar-brand " href="/">
+            
+            Patrick
+            
+        </a>
+        
+    </nav>
+</div>
+
+
+
+
+    <div class="jumbotron jumbotron-fluid">
+    <div class="container">
+        
+        <h1 class="mt-4 article-title page-title">Quick Start of LoRA</h1>
+        
+        <p class="lead text-gray mt-3">By Patrick; Published on 2024-08-11</p>
+        
+        <div class="tags">
+            <ul class="tag-list">
+                
+                <li class="tag-list-item">
+                    <a class="tag-list-link" href="/tags/LLM/">LLM</a>
+                </li>
+                
+                <li class="tag-list-item">
+                    <a class="tag-list-link" href="/tags/Fine%20Tuning/">Fine Tuning</a>
+                </li>
+                
+                <li class="tag-list-item">
+                    <a class="tag-list-link" href="/tags/LoRA/">LoRA</a>
+                </li>
+                
+            </ul>
+        </div>
+        
+    </div>
+</div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9 pt-2">
+                <div class="row">
+                    <div class="col-12">
+                        <main>
+                            <article class="article-text page-content"><h3 id="目标"><a href="#目标" class="headerlink" title="目标"></a>目标</h3><ol>
+<li>Dataset Creation.</li>
+<li>Base Model Choice</li>
+<li></li>
+</ol>
+<h3 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h3><h4 id="1-安装包"><a href="#1-安装包" class="headerlink" title="1. 安装包"></a>1. 安装包</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">!pip install -qqq bitsandbytes==<span class="number">0.39</span><span class="number">.0</span></span><br><span class="line">!pip install -qqq torch==<span class="number">2.0</span><span class="number">.1</span></span><br><span class="line">!pip install -qqq -U git+https://github.com/huggingface/transformers.git@e03a9cc</span><br><span class="line">!pip install -qqq -U git+https://github.com/huggingface/peft.git@42a184f</span><br><span class="line">!pip install -qqq -U git+https://github.com/huggingface/accelerate.git@c9fbb71</span><br><span class="line">!pip install -qqq datasets==<span class="number">2.12</span><span class="number">.0</span></span><br><span class="line">!pip install -qqq loralib==<span class="number">0.1</span><span class="number">.1</span></span><br><span class="line">!pip install -qqq einops==<span class="number">0.6</span><span class="number">.1</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-导包"><a href="#2-导包" class="headerlink" title="2. 导包"></a>2. 导包</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">from</span> pprint <span class="keyword">import</span> pprint</span><br><span class="line"><span class="keyword">import</span> bitsandbytes <span class="keyword">as</span> bnb</span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn</span><br><span class="line"><span class="keyword">import</span> transformers</span><br><span class="line"><span class="keyword">from</span> datasets <span class="keyword">import</span> load_dataset, Dataset</span><br><span class="line"><span class="keyword">from</span> huggingface_hub <span class="keyword">import</span> notebook_login</span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> peft <span class="keyword">import</span> LoraConfig, PeftConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training</span><br><span class="line"><span class="keyword">from</span> transformers <span class="keyword">import</span> AutoConfig, AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig</span><br><span class="line"></span><br><span class="line">os.environ[<span class="string">&quot;CUDA_VISIBLE_DEVICES&quot;</span>] = <span class="string">&quot;0,1&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="3-加载4bits模型"><a href="#3-加载4bits模型" class="headerlink" title="3. 加载4bits模型"></a>3. 加载4bits模型</h4><p>原始论文地址: <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2110.02861">https://arxiv.org/abs/2110.02861</a> <br>量化技术介绍：<a target="_blank" rel="noopener" href="https://huggingface.co/blog/zh/hf-bitsandbytes-integration">https://huggingface.co/blog/zh/hf-bitsandbytes-integration</a></p>
+<blockquote>
+<p><strong>为什么会有量化技术？</strong> </p>
+<p>大模型需要大量GPU才能运行，因此我们需要找到降低资源需求且同时保持模型特性的方法。</p>
+<p><strong>bitsandbytes核心技术</strong> </p>
+<p>1. </p>
+</blockquote>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">MODEL_NAME = <span class="string">&#x27;model/phi-2/&#x27;</span></span><br><span class="line">bnb_config = BitsAndBytesConfig(</span><br><span class="line">    load_in_4bit=<span class="literal">True</span>,</span><br><span class="line">    bnb_4bit_use_double_quant=<span class="literal">True</span>,</span><br><span class="line">    bnb_4bit_quant_type=<span class="string">&quot;nf4&quot;</span>,</span><br><span class="line">    bnb_4bit_compute_dtype=torch.bfloat16</span><br><span class="line">)</span><br><span class="line">model = AutoModelForCausalLM.from_pretrained(</span><br><span class="line">    MODEL_NAME,</span><br><span class="line">    device_map=<span class="string">&quot;auto&quot;</span>,</span><br><span class="line">    trust_remote_code=<span class="literal">True</span>,</span><br><span class="line">    quantization_config=bnb_config</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-不开启梯度检查"><a href="#4-不开启梯度检查" class="headerlink" title="4. 不开启梯度检查"></a>4. 不开启梯度检查</h4><p><strong>梯度检查</strong>：为了减少激活的内存，我们可以开启梯度检查。梯度检查点技术通过在前向传播过程中丢掉一些中间结果，仅保留必要的信息（检查点），来减少内存的使用量。在反向传播过程中，如果需要被丢弃的中间结果时，再重新计算。这样可以显著减少内存消耗，使得训练更深的网络成为可能。</p>
+<p>这里没开启。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=<span class="literal">False</span>)</span><br></pre></td></tr></table></figure>
+
+<h4 id="5-加载分词器"><a href="#5-加载分词器" class="headerlink" title="5. 加载分词器"></a>5. 加载分词器</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># tokenizer</span></span><br><span class="line">tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)</span><br><span class="line">tokenizer.pad_token = tokenizer.eos_token</span><br></pre></td></tr></table></figure>
+
+<h4 id="6-加载lora层"><a href="#6-加载lora层" class="headerlink" title="6. 加载lora层"></a>6. 加载lora层</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">config = LoraConfig(</span><br><span class="line">    r=<span class="number">2</span>,</span><br><span class="line">    lora_alpha=<span class="number">32</span>,</span><br><span class="line">    target_modules=get_last_layer_linears(model),</span><br><span class="line">    lora_dropout=<span class="number">0.05</span>,</span><br><span class="line">    bias=<span class="string">&quot;none&quot;</span>,</span><br><span class="line">    task_type=<span class="string">&quot;CAUSAL_LM&quot;</span></span><br><span class="line">)</span><br><span class="line">model = get_peft_model(model, config)</span><br><span class="line">model.to(device)</span><br></pre></td></tr></table></figure>
+
+<h4 id="7-加载数据集"><a href="#7-加载数据集" class="headerlink" title="7. 加载数据集"></a>7. 加载数据集</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">generate_prompt</span>(<span class="params">data_point</span>):</span><br><span class="line">    <span class="keyword">return</span> <span class="string">f&quot;&quot;&quot;<span class="subst">&#123;data_point[<span class="string">&quot;Question&quot;</span>]&#125;</span>. Answer as briefly as possible: <span class="subst">&#123;data_point[<span class="string">&quot;Answer&quot;</span>]&#125;</span>&quot;&quot;&quot;</span>.strip()</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">generate_and_tokenize_prompt</span>(<span class="params">tokenizer, data_point</span>):</span><br><span class="line">    full_prompt = generate_prompt(data_point)</span><br><span class="line">    tokenized_full_prompt = tokenizer(full_prompt, padding=<span class="literal">True</span>, truncation=<span class="literal">True</span>)</span><br><span class="line">    <span class="keyword">return</span> tokenized_full_prompt</span><br><span class="line"></span><br><span class="line">df = pd.read_csv(<span class="string">&quot;assets/JEOPARDY.csv&quot;</span>)</span><br><span class="line">df.columns = [<span class="built_in">str</span>(q).strip() <span class="keyword">for</span> q <span class="keyword">in</span> df.columns]</span><br><span class="line">data = Dataset.from_pandas(df)</span><br><span class="line">data = data.shuffle().<span class="built_in">map</span>(<span class="keyword">lambda</span> x: generate_and_tokenize_prompt(tokenizer, x))</span><br></pre></td></tr></table></figure>
+
+<h4 id="8-开启训练"><a href="#8-开启训练" class="headerlink" title="8. 开启训练"></a>8. 开启训练</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">training_args = transformers.TrainingArguments(</span><br><span class="line">    per_device_train_batch_size=<span class="number">1</span>,</span><br><span class="line">    gradient_accumulation_steps=<span class="number">4</span>,</span><br><span class="line">    num_train_epochs=<span class="number">1</span>,</span><br><span class="line">    learning_rate=<span class="number">1e-4</span>,</span><br><span class="line">    fp16=<span class="literal">True</span>,</span><br><span class="line">    output_dir=<span class="string">&quot;finetune_jeopardy&quot;</span>,</span><br><span class="line">    optim=<span class="string">&quot;paged_adamw_8bit&quot;</span>,</span><br><span class="line">    lr_scheduler_type=<span class="string">&quot;cosine&quot;</span>,</span><br><span class="line">    warmup_ratio=<span class="number">0.01</span>,</span><br><span class="line">    report_to=<span class="string">&quot;none&quot;</span></span><br><span class="line">)</span><br><span class="line">trainer = transformers.Trainer(</span><br><span class="line">    model=model,</span><br><span class="line">    train_dataset=data,</span><br><span class="line">    args=training_args,</span><br><span class="line">    data_collator=transformers.DataCollatorForLanguageModeling(tokenizer, mlm=<span class="literal">False</span>)</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">model.config.use_cache = <span class="literal">False</span></span><br><span class="line">trainer.train()</span><br></pre></td></tr></table></figure>
+
+<h4 id="9-保存模型"><a href="#9-保存模型" class="headerlink" title="9. 保存模型"></a>9. 保存模型</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">model.save_pretrained(<span class="string">&quot;trained-model&quot;</span>)</span><br></pre></td></tr></table></figure>
+</article>
+                        </main>
+                        
+                        
+                        
+                    </div>
+                </div>
+                <div class="row mt-5 mb-5">
+                    <div class="col-12">
+                        <div class="row">
+    <div class="col">
+        <nav aria-label="paginator" class="paginator">
+            <ul class="pagination d-none d-md-flex pagination-lg justify-content-center">
+                <li class="page-item  disabled ">
+                    <a class="page-link"
+                        href=""
+                        aria-label="Previous">
+                        <span aria-hidden="true">&laquo;
+                            No more</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                </li>
+                <li class="page-item ">
+                    <a class="page-link"
+                        href="/2024/08/11/hello-world/"
+                        aria-label="Next">
+                        <span
+                            aria-hidden="true">Quick Start of Hexo
+                            &raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </li>
+            </ul>
+            <ul class="pagination d-md-none justify-content-center">
+                <li class="page-item  disabled ">
+                    <a class="page-link"
+                        href=""
+                        aria-label="Previous">
+                        <span aria-hidden="true">&laquo;
+                            No more</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                </li>
+                <li class="page-item ">
+                    <a class="page-link"
+                        href="/2024/08/11/hello-world/"
+                        aria-label="Next">
+                        <span
+                            aria-hidden="true">Quick Start of Hexo
+                            &raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div id="vcomment"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="container pt-4 page-sidebar">
+                    
+                    <hr class="row">
+                    <div class="row toc-container">
+                        <div class="col-12">
+                            <h6>NAVIGATION</h6>
+                            <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%9B%AE%E6%A0%87"><span class="toc-text">目标</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4"><span class="toc-text">步骤</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%AE%89%E8%A3%85%E5%8C%85"><span class="toc-text">1. 安装包</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E5%AF%BC%E5%8C%85"><span class="toc-text">2. 导包</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E5%8A%A0%E8%BD%BD4bits%E6%A8%A1%E5%9E%8B"><span class="toc-text">3. 加载4bits模型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-%E4%B8%8D%E5%BC%80%E5%90%AF%E6%A2%AF%E5%BA%A6%E6%A3%80%E6%9F%A5"><span class="toc-text">4. 不开启梯度检查</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-%E5%8A%A0%E8%BD%BD%E5%88%86%E8%AF%8D%E5%99%A8"><span class="toc-text">5. 加载分词器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6-%E5%8A%A0%E8%BD%BDlora%E5%B1%82"><span class="toc-text">6. 加载lora层</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#7-%E5%8A%A0%E8%BD%BD%E6%95%B0%E6%8D%AE%E9%9B%86"><span class="toc-text">7. 加载数据集</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#8-%E5%BC%80%E5%90%AF%E8%AE%AD%E7%BB%83"><span class="toc-text">8. 开启训练</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#9-%E4%BF%9D%E5%AD%98%E6%A8%A1%E5%9E%8B"><span class="toc-text">9. 保存模型</span></a></li></ol></li></ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+    <div class="jumbotron jumbotron-fluid mb-0">
+        <div class="container-fluid">
+            <div class="col text-center">
+                <div class="bottom-social">
+                    <div class="row">
+    <div class="col text-center">
+        <ul class="list-inline">
+            
+            <li class="list-inline-item">
+                
+                <a target="_blank" rel="noopener" href="https://github.com/zhanghaopai">
+                    <span class="fa-stack fa-2x icon-link">
+                        <i class="fas fa-circle fa-stack-2x"></i>
+                        <i class="fab fa-github fa-stack-1x fa-inverse"></i>
+                    </span>
+                </a>
+                
+            </li>
+            
+        </ul>
+    </div>
+</div>
+
+                </div>
+                <p class="copyright text-muted">
+                    Copyright &copy; 
+                    <br>
+                    Theme: <a target="_blank" rel="noopener" href="https://github.com/Hanlin-Dong/hexo-theme-adagio">Adagio</a> - A <a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> theme made with love by <a target="_blank" rel="noopener" href="http://www.hanlindong.com">Hanlin Dong</a>.
+                    <br>
+                    Thanks for coming!
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.9.0/js/all.min.js"></script>
+     
+    <script defer src="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/katex.min.js"></script>
+    <script defer src="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+    
+
+
+
+<script src="/js/av.min.js"></script>
+
+
+<script src="/js/valine.min.js"></script>
+
+
+<script src="/js/applause-easy.js"></script>
+
+<script>
+$(document).ready(function() {
+    new ApplauseEasy({
+        id: 'applause-easy',
+        appId: "xxxxxxxxxx",
+        appKey: "xxxxxxxxxx",
+        img_src: "http://img.hanlindong.com/blog/site/clap.png",
+        img_width: "50px",
+        img_height: "50px",
+        trigger_every: 20,
+        trigger_fun: () => {alert("Thanks!");}
+    })
+})
+</script>
+
+<script src="/js/adagio.js"></script>
+
+
+
+<script>
+    var _hmt = _hmt || [];
+    (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?123456789";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-11111111-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+        dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'UA-11111111-1');
+</script>
+
+
+    
+</body>
+</html>
