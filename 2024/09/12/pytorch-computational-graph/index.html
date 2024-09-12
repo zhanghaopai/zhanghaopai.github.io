@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <link rel="shortcut icon" href="http://some.url/to/favicon.ico">
+    <title>pytorch-计算图-Patrick's Blogs</title>
+
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/academicons/1.8.6/css/academicons.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.9.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/katex.min.css">
+    
+
+    
+<link rel="stylesheet" href="/css/adagio.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+<body>
+    <div class="container-fluid">
+    <nav class="nav">
+        <div class="collapse navbar-collapse" id="navbar-sm">
+            
+        </div>
+    </nav>
+</div>
+
+<div class="d-flex d-md-none" style="width: 100%; background-color: #e9ecef">
+    
+    <nav class="navbar ml-auto">
+        <a class="navbar-brand" href="/">
+            
+            Patrick
+            
+        </a>
+    </nav>
+</div>
+
+
+<div class="container d-none d-md-block my-navbar">
+    <nav class="navbar navbar-expand-sm navbar-light bg-transparent">
+        <a class="navbar-brand " href="/">
+            
+            Patrick
+            
+        </a>
+        
+    </nav>
+</div>
+
+
+
+
+    <div class="jumbotron jumbotron-fluid">
+    <div class="container">
+        
+        <h1 class="mt-4 article-title page-title">pytorch-计算图</h1>
+        
+        <p class="lead text-gray mt-3">By Patrick; Published on 2024-09-12</p>
+        
+        <div class="tags">
+            <ul class="tag-list">
+                
+                <li class="tag-list-item">
+                    <a class="tag-list-link" href="/tags/pytorch/">pytorch</a>
+                </li>
+                
+            </ul>
+        </div>
+        
+    </div>
+</div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9 pt-2">
+                <div class="row">
+                    <div class="col-12">
+                        <main>
+                            <article class="article-text page-content"><h2 id="目标">目标</h2>
+<ol type="1">
+<li>掌握计算图的原理</li>
+<li>掌握计算图静态生成和动态生成算法</li>
+<li>掌握计算图的常用执行方法</li>
+</ol>
+<h2 id="什么是计算图">什么是计算图？</h2>
+<p>计算图（Computational
+Graph）是机器学习和深度学习中用于表示计算过程的一种数据结构。它由<strong>节点（Node）</strong>和<strong>边（Edge）</strong>组成，其中节点操作（例如：加法、乘法、激活函数等），边表示张量的状态及张量之间的依赖关系，即数据流动的方向。</p>
+<p>计算图在深度学习框架中作用包括：</p>
+<ol type="1">
+<li>统一的计算过程表达：在编写机器学习模型程序的过程中，用户希望使用高层次编程语言（如Python、Julia和C++）。然而，硬件加速器等设备往往只提供了C和C++编程接口，因此机器学习系统的实现通常需要基于C和C++。用不同的高层次语言编写的程序因此需要被表达为一个统一的数据结构，从而被底层共享的C和C++系统模块执行。这个数据结构（即计算图）可以表述用户的输入数据、模型中的计算逻辑（通常称为算子）以及算子之间的执行顺序。</li>
+<li>自动微分：通过计算图可以自动计算梯度，简化了手动推导和编码梯度的过程。</li>
+<li>优化性能：计算图可以优化计算过程，例如通过融合操作来减少内存消耗和计算时间。</li>
+<li>可视化：计算图可以帮助我们理解模型的结构和数据流动，便于调试和优化。</li>
+</ol>
+<p>在实际应用中，如TensorFlow、PyTorch等深度学习框架都使用计算图来构建和训练模型。用户可以通过定义计算图来构建模型，然后利用框架提供的优化器和反向传播算法来训练模型。</p>
+<h2 id="计算图的基本构成">计算图的基本构成</h2>
+<p>如使用计算图表示 $ Z=ReLU(X*Y) $ 则可使用如下的计算图表示</p>
+<p><img src="/2024/09/12/pytorch-computational-graph/computational-graph-1.png"></p>
+<h3 id="张量">张量</h3>
+<p>张量作为基本数据结构，具有如下属性：</p>
+<table>
+<colgroup>
+<col style="width: 16%">
+<col style="width: 31%">
+<col style="width: 51%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>属性</th>
+<th>功能</th>
+<th>实例</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>秩或维数</td>
+<td>表示张量的轴数</td>
+<td>标量为0，向量为1，矩阵为2...</td>
+</tr>
+<tr class="even">
+<td>形状（shape）</td>
+<td>张量<strong>每个维度</strong>的长度</td>
+<td>如[3,3,3]</td>
+</tr>
+<tr class="odd">
+<td>数据类型（dtype）</td>
+<td>张量存储的数据类型</td>
+<td>bool、uint8、int16、float32、float64等，默认为float32</td>
+</tr>
+<tr class="even">
+<td>存储位置</td>
+<td>创建张量时可以指定存储的设备位置</td>
+<td>CPU、GPU</td>
+</tr>
+<tr class="odd">
+<td>名字</td>
+<td>张量的标识符</td>
+<td>略</td>
+</tr>
+</tbody>
+</table>
+<p>以下为部分张量的可视化：</p>
+<p><img src="/2024/09/12/pytorch-computational-graph/tensor.png"></p>
+<h3 id="算子">算子</h3>
+<p>算子是计算图基本计算单元，对张量数据进行加工处理，我们按照功能将算子分为以下四个类别：</p>
+<ol type="1">
+<li>张量操作算子：包括张量的结构操作和数学运算。</li>
+<li>神经网络算子：包括特征提取、激活函数、损失函数、优化算法等。</li>
+<li>数据流算子：包括数据的预处理和数据载入相关算子，数据预处理主要针对图像的裁剪填充、旋转、归一化等；数据载入算子包括对数据集的随机乱序、分批载入、预载入等。</li>
+<li>控制流算子：可以控制计算图的数据流向，如条件运算符和循环运算符。控制流操作不仅会影响神经网络模型的前向运算，也会影响反向梯度计算。</li>
+</ol>
+<h2 id="依赖计算">依赖计算</h2>
+<p>计算图是一个<strong>有向无环图</strong>。如果表示如下的代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">y1 = relu(matmul(X1, W1))</span><br><span class="line">y2 = relu(matmul(X2, W2))</span><br><span class="line">Y = y1+y2</span><br></pre></td></tr></table></figure>
+<p>可以使用如下计算图：</p>
+<p><img src="/2024/09/12/pytorch-computational-graph/计算依赖.png"></p>
+<p>将依赖关系进行区分如下：</p>
+<ol type="1">
+<li>直接依赖：节点ReLU1直接依赖于节点Matmul1，即如果节点ReLU1要执行运算，必须接受直接来自节点Matmul1的输出数据；</li>
+<li>间接依赖：节点Add间接依赖于节点Matmul1，即节点Matmul1的数据并未直接传输给节点Add，而是经过了某个或者某些中间节点进行处理后再传输给节点Add，而这些中间节点可能是节点Add的直接依赖节点，也可能是间接依赖节点；</li>
+<li>相互独立：在计算图中节点Matmul1与节点Matmul2之间并无数据输入输出依赖关系，所以这两个节点间相互独立。</li>
+</ol>
+<h3 id="循环关系">循环关系</h3>
+<h4 id="循坏依赖问题">循坏依赖问题</h4>
+<p><img src="/2024/09/12/pytorch-computational-graph/循环依赖.png"></p>
+<h4 id="展开机制">展开机制</h4>
+<p>在机器学习框架中，表示循环关系（Loop
+Iteration）通常是以展开机制（Unrolling）来实现。循环三次的计算图进行展开如下图。循环体的计算子图按照迭代次数进行复制3次，将代表相邻迭代轮次的子图进行串联，相邻迭代轮次的计算子图之间是直接依赖关系。</p>
+<p><img src="/2024/09/12/pytorch-computational-graph/循环展开.png"></p>
+<h2 id="控制流">控制流</h2>
+<h2 id="梯度计算">梯度计算</h2>
+</article>
+                        </main>
+                        
+                        
+                        
+                    </div>
+                </div>
+                <div class="row mt-5 mb-5">
+                    <div class="col-12">
+                        <div class="row">
+    <div class="col">
+        <nav aria-label="paginator" class="paginator">
+            <ul class="pagination d-none d-md-flex pagination-lg justify-content-center">
+                <li class="page-item  disabled ">
+                    <a class="page-link"
+                        href=""
+                        aria-label="Previous">
+                        <span aria-hidden="true">&laquo;
+                            No more</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                </li>
+                <li class="page-item ">
+                    <a class="page-link"
+                        href="/2024/08/21/ThesisProposal/"
+                        aria-label="Next">
+                        <span
+                            aria-hidden="true">开题报告
+                            &raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </li>
+            </ul>
+            <ul class="pagination d-md-none justify-content-center">
+                <li class="page-item  disabled ">
+                    <a class="page-link"
+                        href=""
+                        aria-label="Previous">
+                        <span aria-hidden="true">&laquo;
+                            No more</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                </li>
+                <li class="page-item ">
+                    <a class="page-link"
+                        href="/2024/08/21/ThesisProposal/"
+                        aria-label="Next">
+                        <span
+                            aria-hidden="true">开题报告
+                            &raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div id="vcomment"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="container pt-4 page-sidebar">
+                    
+                    <hr class="row">
+                    <div class="row toc-container">
+                        <div class="col-12">
+                            <h6>NAVIGATION</h6>
+                            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9B%AE%E6%A0%87"><span class="toc-text">目标</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E8%AE%A1%E7%AE%97%E5%9B%BE"><span class="toc-text">什么是计算图？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%A1%E7%AE%97%E5%9B%BE%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%9E%84%E6%88%90"><span class="toc-text">计算图的基本构成</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%A0%E9%87%8F"><span class="toc-text">张量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AE%97%E5%AD%90"><span class="toc-text">算子</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%9D%E8%B5%96%E8%AE%A1%E7%AE%97"><span class="toc-text">依赖计算</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BE%AA%E7%8E%AF%E5%85%B3%E7%B3%BB"><span class="toc-text">循环关系</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%BE%AA%E5%9D%8F%E4%BE%9D%E8%B5%96%E9%97%AE%E9%A2%98"><span class="toc-text">循坏依赖问题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B1%95%E5%BC%80%E6%9C%BA%E5%88%B6"><span class="toc-text">展开机制</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A7%E5%88%B6%E6%B5%81"><span class="toc-text">控制流</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A2%AF%E5%BA%A6%E8%AE%A1%E7%AE%97"><span class="toc-text">梯度计算</span></a></li></ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+    <div class="jumbotron jumbotron-fluid mb-0">
+        <div class="container-fluid">
+            <div class="col text-center">
+                <div class="bottom-social">
+                    <div class="row">
+    <div class="col text-center">
+        <ul class="list-inline">
+            
+            <li class="list-inline-item">
+                
+                <a target="_blank" rel="noopener" href="https://github.com/zhanghaopai">
+                    <span class="fa-stack fa-2x icon-link">
+                        <i class="fas fa-circle fa-stack-2x"></i>
+                        <i class="fab fa-github fa-stack-1x fa-inverse"></i>
+                    </span>
+                </a>
+                
+            </li>
+            
+        </ul>
+    </div>
+</div>
+
+                </div>
+                <p class="copyright text-muted">
+                    Copyright &copy; 
+                    <br>
+                    Theme: <a target="_blank" rel="noopener" href="https://github.com/Hanlin-Dong/hexo-theme-adagio">Adagio</a> - A <a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> theme made with love by <a target="_blank" rel="noopener" href="http://www.hanlindong.com">Hanlin Dong</a>.
+                    <br>
+                    Thanks for coming!
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.9.0/js/all.min.js"></script>
+     
+    <script defer src="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/katex.min.js"></script>
+    <script defer src="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+    
+
+
+
+<script src="/js/av.min.js"></script>
+
+
+<script src="/js/valine.min.js"></script>
+
+
+<script src="/js/applause-easy.js"></script>
+
+<script>
+$(document).ready(function() {
+    new ApplauseEasy({
+        id: 'applause-easy',
+        appId: "xxxxxxxxxx",
+        appKey: "xxxxxxxxxx",
+        img_src: "http://img.hanlindong.com/blog/site/clap.png",
+        img_width: "50px",
+        img_height: "50px",
+        trigger_every: 20,
+        trigger_fun: () => {alert("Thanks!");}
+    })
+})
+</script>
+
+<script src="/js/adagio.js"></script>
+
+
+
+<script>
+    var _hmt = _hmt || [];
+    (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?123456789";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-11111111-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+        dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'UA-11111111-1');
+</script>
+
+
+    
+</body>
+</html>
