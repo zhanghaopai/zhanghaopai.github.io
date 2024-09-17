@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <link rel="shortcut icon" href="http://some.url/to/favicon.ico">
+    <title>深度学习基本步骤-Patrick's Blogs</title>
+
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/academicons/1.8.6/css/academicons.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.9.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/katex.min.css">
+    
+
+    
+<link rel="stylesheet" href="/css/adagio.css">
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+<body>
+    <div class="container-fluid">
+    <nav class="nav">
+        <div class="collapse navbar-collapse" id="navbar-sm">
+            
+        </div>
+    </nav>
+</div>
+
+<div class="d-flex d-md-none" style="width: 100%; background-color: #e9ecef">
+    
+    <nav class="navbar ml-auto">
+        <a class="navbar-brand" href="/">
+            
+            Patrick
+            
+        </a>
+    </nav>
+</div>
+
+
+<div class="container d-none d-md-block my-navbar">
+    <nav class="navbar navbar-expand-sm navbar-light bg-transparent">
+        <a class="navbar-brand " href="/">
+            
+            Patrick
+            
+        </a>
+        
+    </nav>
+</div>
+
+
+
+
+    <div class="jumbotron jumbotron-fluid">
+    <div class="container">
+        
+        <h1 class="mt-4 article-title page-title">深度学习基本步骤</h1>
+        
+        <p class="lead text-gray mt-3">By Patrick; Published on 2024-09-17</p>
+        
+        <div class="tags">
+            <ul class="tag-list">
+                
+                <li class="tag-list-item">
+                    <a class="tag-list-link" href="/tags/pytorch/">pytorch</a>
+                </li>
+                
+                <li class="tag-list-item">
+                    <a class="tag-list-link" href="/tags/deep-learning/">deep-learning</a>
+                </li>
+                
+            </ul>
+        </div>
+        
+    </div>
+</div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9 pt-2">
+                <div class="row">
+                    <div class="col-12">
+                        <main>
+                            <article class="article-text page-content"><h2 id="基本配置">基本配置</h2>
+<p>以下的超参数可以统一配置，方便后续修改：</p>
+<ol type="1">
+<li>batch_size</li>
+<li>初始学习率</li>
+<li>训练次数（max_epochs）</li>
+<li>GPU配置</li>
+</ol>
+<blockquote>
+<p>batch_size=16 <br> lr=1e4 <br> max_epochs=100 <br>
+device=torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+<br></p>
+</blockquote>
+<h2 id="数据读入">数据读入</h2>
+<p>pytorch是通过Dataset和DataLoader的形式完成数据读入的。其中两个类分别有如下作用：</p>
+<ol type="1">
+<li><strong>Dataset</strong>:定义好数据的格式和数据变换形式。</li>
+<li><strong>DataLoader</strong>:用iterative的方式不断地读入批次数据。</li>
+</ol>
+<h3 id="dataset">Dataset</h3>
+<p>pytorch预定义了很多数据集，定义在了<code>torchvision.datasets</code>包中，常用的MNIST、CIFAR、ImageNet等数据都有，但是在实际项目中，
+我们大多数情况都是使用的自定义的数据集，这时候急需要继承<code>torch.utils.data.Dataset</code>，下面我们将演示一下，如何实现自定义数据集。</p>
+<h4 id="通用的dataset模板">通用的Dataset模板</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyDataset</span>(<span class="title class_ inherited__">Dataset</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, ...</span>):</span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__len__</span>(<span class="params">self</span>):</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">len</span> <span class="comment"># 返回数据集数据个数</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__getitem__</span>(<span class="params">self, index</span>):</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">return</span> image, label <span class="comment"># 返回第 index 个数据 + 标签</span></span><br></pre></td></tr></table></figure>
+<p>通用模板包含3个方法：</p>
+<ol type="1">
+<li><code>__init__</code>：数据集的初始化，可传入一些必要的参数</li>
+<li><code>__len__</code>：返回数据集个数</li>
+<li><code>__getitem__</code>：传入index，返回第index个数据和标签值</li>
+</ol>
+<p>对于以上3个方法的实现比较灵活，一般包含以下两种方式：</p>
+<ul>
+<li>在<code>__init__</code>初始化时，将所有数据读入，<code>__len__</code>返回数据集长度，<code>__getitem__</code>直接通过索引返回数据即可。</li>
+<li>在<code>__init__</code>只给出本地文件地址，在<code>__getitem__</code>中现场读取相应数据和标签。</li>
+</ul>
+<h4 id="自定义dataset示例">自定义Dataset示例</h4>
+<p>一个简单的实例，该数据集包含从1-1000的整数。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> torch.utils.data <span class="keyword">import</span> Dataset</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">NumbersDataset</span>(<span class="title class_ inherited__">Dataset</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="variable language_">self</span>.samples = <span class="built_in">list</span>(<span class="built_in">range</span>(<span class="number">1</span>, <span class="number">1001</span>))</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__len__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">len</span>(<span class="variable language_">self</span>.samples)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__getitem__</span>(<span class="params">self, idx</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">self</span>.samples[idx]</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    dataset = NumbersDataset()</span><br><span class="line">    <span class="built_in">print</span>(<span class="built_in">len</span>(dataset))</span><br><span class="line">    <span class="built_in">print</span>(dataset[<span class="number">100</span>])</span><br><span class="line">    <span class="built_in">print</span>(dataset[<span class="number">122</span>:<span class="number">361</span>])</span><br></pre></td></tr></table></figure>
+<h4 id="高级dataset示例">高级Dataset示例</h4>
+<p>该示例来自pytorch<a target="_blank" rel="noopener" href="https://pytorch.org/tutorials/beginner/basics/data_tutorial.html">官方网站</a>。</p>
+<p>该数据集返回Fashion-MNIST</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"><span class="keyword">from</span> torchvision.io <span class="keyword">import</span> read_image</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">CustomImageDataset</span>(<span class="title class_ inherited__">Dataset</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, annotations_file, img_dir, transform=<span class="literal">None</span>, target_transform=<span class="literal">None</span></span>):</span><br><span class="line">        <span class="variable language_">self</span>.img_labels = pd.read_csv(annotations_file)</span><br><span class="line">        <span class="variable language_">self</span>.img_dir = img_dir</span><br><span class="line">        <span class="variable language_">self</span>.transform = transform</span><br><span class="line">        <span class="variable language_">self</span>.target_transform = target_transform</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__len__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">len</span>(<span class="variable language_">self</span>.img_labels)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__getitem__</span>(<span class="params">self, idx</span>):</span><br><span class="line">        img_path = os.path.join(<span class="variable language_">self</span>.img_dir, <span class="variable language_">self</span>.img_labels.iloc[idx, <span class="number">0</span>])</span><br><span class="line">        image = read_image(img_path)</span><br><span class="line">        label = <span class="variable language_">self</span>.img_labels.iloc[idx, <span class="number">1</span>]</span><br><span class="line">        <span class="keyword">if</span> <span class="variable language_">self</span>.transform:</span><br><span class="line">            image = <span class="variable language_">self</span>.transform(image)</span><br><span class="line">        <span class="keyword">if</span> <span class="variable language_">self</span>.target_transform:</span><br><span class="line">            label = <span class="variable language_">self</span>.target_transform(label)</span><br><span class="line">        <span class="keyword">return</span> image, label</span><br></pre></td></tr></table></figure>
+<p><strong>应当注意</strong>：自定义的数据集应当只包含Train数据或者Test数据，然后通过传入Train数据和Test数据构成不同的数据集。</p>
+<h3 id="dataloader">DataLoader</h3>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> torch.utils.data <span class="keyword">import</span> DataLoader</span><br><span class="line"></span><br><span class="line"><span class="comment"># Dataset</span></span><br><span class="line">train_data = CustomImageDataset(train_path, transform=data_transform)</span><br><span class="line">val_data = CustomImageDataset(val_path, transform=data_transform)</span><br><span class="line"></span><br><span class="line"><span class="comment"># DataLoader</span></span><br><span class="line">train_loader = torch.utils.data.DataLoader(train_data, batch_size=<span class="number">16</span>, num_workers=<span class="number">4</span>, shuffle=<span class="literal">True</span>, drop_last=<span class="literal">True</span>)</span><br><span class="line">val_loader = torch.utils.data.DataLoader(val_data, batch_size=<span class="number">16</span>, num_workers=<span class="number">4</span>, shuffle=<span class="literal">False</span>)</span><br></pre></td></tr></table></figure>
+<p>其中:</p>
+<ul>
+<li>batch_size：样本是按“批”读入的，batch_size就是每次读入的样本数，以上示例每次读入16个样本。</li>
+<li>num_workers：有多少个进程用于读取数据，Windows下该参数设置为0，Linux下常见的为4或者8，根据自己的电脑配置来设置</li>
+<li>shuffle：是否将读入的数据打乱，一般在训练集中设置为True，验证集中设置为False</li>
+<li>drop_last：对于样本最后一部分没有达到批次数的样本，使其不再参与训练</li>
+</ul>
+<p>PyTorch中的DataLoader的读取可以使用next和iter来完成，使用如下代码查看dataloader读入的数据：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">images, labels = next(iter(val_loader))</span><br></pre></td></tr></table></figure>
+<h2 id="模型构建">模型构建</h2>
+<h3 id="神经网络构建">神经网络构建</h3>
+<h4 id="通用的神经网络模板">通用的神经网络模板</h4>
+<p>Module 类是 torch.nn
+模块里提供的一个模型构造类，是所有神经网络模块的基类，我们可以继承它来定义我们想要的模型。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">from</span> torch <span class="keyword">import</span> nn</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">CustomModule</span>(nn.Module):</span><br><span class="line">  <span class="comment"># 模型初始化</span></span><br><span class="line">  <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, **kwargs</span>):</span><br><span class="line">    ···</span><br><span class="line">  <span class="comment"># 定义模型的前向计算，即如何根据输入x计算返回所需要的模型输出</span></span><br><span class="line">  <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x</span>):</span><br><span class="line">    ···</span><br></pre></td></tr></table></figure>
+<p>定义模型时，无需定义反向传播函数，系统将通过计算图，自动生成反向传播所需的backward函数。</p>
+<h4 id="简单的mlp网络">简单的MLP网络</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">from</span> torch <span class="keyword">import</span> nn</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MLP</span>(nn.Module):</span><br><span class="line">  <span class="comment"># 声明带有模型参数的层，这里声明了两个全连接层</span></span><br><span class="line">  <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, **kwargs</span>):</span><br><span class="line">    <span class="comment"># 调用MLP父类Block的构造函数来进行必要的初始化。这样在构造实例时还可以指定其他函数</span></span><br><span class="line">    <span class="built_in">super</span>(MLP, <span class="variable language_">self</span>).__init__(**kwargs)</span><br><span class="line">    <span class="variable language_">self</span>.hidden = nn.Linear(<span class="number">784</span>, <span class="number">256</span>)</span><br><span class="line">    <span class="variable language_">self</span>.act = nn.ReLU()</span><br><span class="line">    <span class="variable language_">self</span>.output = nn.Linear(<span class="number">256</span>,<span class="number">10</span>)</span><br><span class="line">    </span><br><span class="line">   <span class="comment"># 定义模型的前向计算，即如何根据输入x计算返回所需要的模型输出</span></span><br><span class="line">  <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x</span>):</span><br><span class="line">    o = <span class="variable language_">self</span>.act(<span class="variable language_">self</span>.hidden(x))</span><br><span class="line">    <span class="keyword">return</span> <span class="variable language_">self</span>.output(o)   </span><br></pre></td></tr></table></figure>
+<p>使用网络：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">X = torch.rand(batch_size,<span class="number">784</span>) <span class="comment"># 设置一个随机的输入张量</span></span><br><span class="line">net = MLP() <span class="comment"># 实例化模型</span></span><br><span class="line">net(X) <span class="comment"># 前向计算</span></span><br></pre></td></tr></table></figure>
+<h3 id="神经网络中常见的层">神经网络中常见的层</h3>
+<h2 id="损失函数">损失函数</h2>
+<h2 id="训练与评估">训练与评估</h2>
+<h3 id="训练">训练</h3>
+<p>一个完成的训练过程如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">train</span>(<span class="params">epoch</span>):</span><br><span class="line">    model.train()</span><br><span class="line">    train_loss = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> data, label <span class="keyword">in</span> train_loader:</span><br><span class="line">        data, label = data.cuda(), label.cuda()</span><br><span class="line">        optimizer.zero_grad()</span><br><span class="line">        output = model(data)</span><br><span class="line">        loss = criterion(output, label)</span><br><span class="line">        loss.backward()</span><br><span class="line">        optimizer.step()</span><br><span class="line">        train_loss += loss.item()*data.size(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">    train_loss = train_loss/<span class="built_in">len</span>(train_loader.dataset)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;Epoch: &#123;&#125; \tTraining Loss: &#123;:.6f&#125;&#x27;</span>.<span class="built_in">format</span>(epoch, train_loss))</span><br></pre></td></tr></table></figure>
+<h3 id="验证">验证</h3>
+<p>对应的，一个完整的验证过程为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">val</span>(<span class="params">epoch</span>):       </span><br><span class="line">    model.<span class="built_in">eval</span>()</span><br><span class="line">    val_loss = <span class="number">0</span></span><br><span class="line">    <span class="keyword">with</span> torch.no_grad():</span><br><span class="line">        <span class="keyword">for</span> data, label <span class="keyword">in</span> val_loader:</span><br><span class="line">            data, label = data.cuda(), label.cuda()</span><br><span class="line">            output = model(data)</span><br><span class="line">            preds = torch.argmax(output, <span class="number">1</span>)</span><br><span class="line">            loss = criterion(output, label)</span><br><span class="line">            val_loss += loss.item()*data.size(<span class="number">0</span>)</span><br><span class="line">            running_accu += torch.<span class="built_in">sum</span>(preds == label.data)</span><br><span class="line">    val_loss = val_loss/<span class="built_in">len</span>(val_loader.dataset)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;Epoch: &#123;&#125; \tTraining Loss: &#123;:.6f&#125;&#x27;</span>.<span class="built_in">format</span>(epoch, val_loss))</span><br></pre></td></tr></table></figure>
+</article>
+                        </main>
+                        
+                        
+                        
+                    </div>
+                </div>
+                <div class="row mt-5 mb-5">
+                    <div class="col-12">
+                        <div class="row">
+    <div class="col">
+        <nav aria-label="paginator" class="paginator">
+            <ul class="pagination d-none d-md-flex pagination-lg justify-content-center">
+                <li class="page-item  disabled ">
+                    <a class="page-link"
+                        href=""
+                        aria-label="Previous">
+                        <span aria-hidden="true">&laquo;
+                            No more</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                </li>
+                <li class="page-item ">
+                    <a class="page-link"
+                        href="/2024/09/16/pytorch-autograd/"
+                        aria-label="Next">
+                        <span
+                            aria-hidden="true">pytorch-autograd
+                            &raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </li>
+            </ul>
+            <ul class="pagination d-md-none justify-content-center">
+                <li class="page-item  disabled ">
+                    <a class="page-link"
+                        href=""
+                        aria-label="Previous">
+                        <span aria-hidden="true">&laquo;
+                            No more</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                </li>
+                <li class="page-item ">
+                    <a class="page-link"
+                        href="/2024/09/16/pytorch-autograd/"
+                        aria-label="Next">
+                        <span
+                            aria-hidden="true">pytorch-autograd
+                            &raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div id="vcomment"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="container pt-4 page-sidebar">
+                    
+                    <hr class="row">
+                    <div class="row toc-container">
+                        <div class="col-12">
+                            <h6>NAVIGATION</h6>
+                            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E9%85%8D%E7%BD%AE"><span class="toc-text">基本配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E8%AF%BB%E5%85%A5"><span class="toc-text">数据读入</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#dataset"><span class="toc-text">Dataset</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%80%9A%E7%94%A8%E7%9A%84dataset%E6%A8%A1%E6%9D%BF"><span class="toc-text">通用的Dataset模板</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89dataset%E7%A4%BA%E4%BE%8B"><span class="toc-text">自定义Dataset示例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%AB%98%E7%BA%A7dataset%E7%A4%BA%E4%BE%8B"><span class="toc-text">高级Dataset示例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#dataloader"><span class="toc-text">DataLoader</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A8%A1%E5%9E%8B%E6%9E%84%E5%BB%BA"><span class="toc-text">模型构建</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E6%9E%84%E5%BB%BA"><span class="toc-text">神经网络构建</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%80%9A%E7%94%A8%E7%9A%84%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E6%A8%A1%E6%9D%BF"><span class="toc-text">通用的神经网络模板</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AE%80%E5%8D%95%E7%9A%84mlp%E7%BD%91%E7%BB%9C"><span class="toc-text">简单的MLP网络</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E4%B8%AD%E5%B8%B8%E8%A7%81%E7%9A%84%E5%B1%82"><span class="toc-text">神经网络中常见的层</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8D%9F%E5%A4%B1%E5%87%BD%E6%95%B0"><span class="toc-text">损失函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%AD%E7%BB%83%E4%B8%8E%E8%AF%84%E4%BC%B0"><span class="toc-text">训练与评估</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%AD%E7%BB%83"><span class="toc-text">训练</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%AA%8C%E8%AF%81"><span class="toc-text">验证</span></a></li></ol></li></ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+    <div class="jumbotron jumbotron-fluid mb-0">
+        <div class="container-fluid">
+            <div class="col text-center">
+                <div class="bottom-social">
+                    <div class="row">
+    <div class="col text-center">
+        <ul class="list-inline">
+            
+            <li class="list-inline-item">
+                
+                <a target="_blank" rel="noopener" href="https://github.com/zhanghaopai">
+                    <span class="fa-stack fa-2x icon-link">
+                        <i class="fas fa-circle fa-stack-2x"></i>
+                        <i class="fab fa-github fa-stack-1x fa-inverse"></i>
+                    </span>
+                </a>
+                
+            </li>
+            
+        </ul>
+    </div>
+</div>
+
+                </div>
+                <p class="copyright text-muted">
+                    Copyright &copy; 
+                    <br>
+                    Theme: <a target="_blank" rel="noopener" href="https://github.com/Hanlin-Dong/hexo-theme-adagio">Adagio</a> - A <a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> theme made with love by <a target="_blank" rel="noopener" href="http://www.hanlindong.com">Hanlin Dong</a>.
+                    <br>
+                    Thanks for coming!
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.9.0/js/all.min.js"></script>
+     
+    <script defer src="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/katex.min.js"></script>
+    <script defer src="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+    
+
+
+
+<script src="/js/av.min.js"></script>
+
+
+<script src="/js/valine.min.js"></script>
+
+
+<script src="/js/applause-easy.js"></script>
+
+<script>
+$(document).ready(function() {
+    new ApplauseEasy({
+        id: 'applause-easy',
+        appId: "xxxxxxxxxx",
+        appKey: "xxxxxxxxxx",
+        img_src: "http://img.hanlindong.com/blog/site/clap.png",
+        img_width: "50px",
+        img_height: "50px",
+        trigger_every: 20,
+        trigger_fun: () => {alert("Thanks!");}
+    })
+})
+</script>
+
+<script src="/js/adagio.js"></script>
+
+
+
+<script>
+    var _hmt = _hmt || [];
+    (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?123456789";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-11111111-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+        dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'UA-11111111-1');
+</script>
+
+
+    
+</body>
+</html>
