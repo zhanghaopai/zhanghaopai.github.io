@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <link rel="shortcut icon" href="http://some.url/to/favicon.ico">
-    <title>Patrick's Blogs</title>
+    <title>Seq2Seq-Patrick's Blogs</title>
 
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/academicons/1.8.6/css/academicons.min.css">
@@ -58,48 +58,93 @@
 
 
     <div class="jumbotron jumbotron-fluid">
-        <div class="container">
-            <h1 class="mt-4 article-title page-title">TAG: LoRA</h1>
-        </div>
-    </div>
     <div class="container">
-        <div class="row mt-3">
-            <div class="col-md-9">
+        
+        <h1 class="mt-4 article-title page-title">Seq2Seq</h1>
+        
+        <p class="lead text-gray mt-3">By Patrick; Published on 2024-11-14</p>
+        
+        <div class="tags">
+            <ul class="tag-list">
                 
+                <li class="tag-list-item">
+                    <a class="tag-list-link" href="/tags/transformer/">transformer</a>
+                </li>
+                
+            </ul>
+        </div>
+        
+    </div>
+</div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9 pt-2">
                 <div class="row">
-                    <div class="col">
-                        <a href="/2024/08/11/LLM-Quick-Start/" class="index-card-link">
-                            <div class="card-body index-card-box">
-                                <h4 class="card-title text-dark article-title">Quick Start of LoRA</h4>
-                                <h6 class="card-subtitle mt-2 text-muted">
-                                    By Patrick
-                                    ; Published on 2024-08-11</h6>
-                            </div>
-                        </a>
+                    <div class="col-12">
+                        <main>
+                            <article class="article-text page-content"><h1 id="seq2seq架构">Seq2Seq架构</h1>
+<h2 id="seq2seq简介">Seq2Seq简介</h2>
+<blockquote>
+<p>全称为"Sequence to
+Sequence"，即序列到序列架构，顾名思义：从一个文本序列到一个文本序列，通常用于机器翻译、文本摘要任务。</p>
+</blockquote>
+<h2 id="seq2seq架构-1">Seq2Seq架构</h2>
+<p>下面以机器翻译为例子，讲解Seq2Seq架构。</p>
+<figure>
+<img src="/2024/11/14/Seq2Seq/机器翻译.png" alt="机器翻译">
+<figcaption aria-hidden="true">机器翻译</figcaption>
+</figure>
+<p>我们看到机器翻译任务中的Seq2Seq模型是由编码器（Encoder）和解码器（Decoder）组成的，Encoder将输入的法语序列编码成context向量，然后Decoder根据context解码出英文序列，从而完成机器翻译任务。Encoder和Decoder一般是采用循环神经网络RNN。</p>
+<h2 id="seq2seq细节">Seq2Seq细节</h2>
+<p>那么对于Encoder和Decoder的RNN是如何工作的呢？</p>
+<h3 id="encoder">Encoder</h3>
+<ol type="1">
+<li>输入：假设序列输入是一个句子，这个句子由n个词表示： <span class="math inline">\(sentence=\{w_1, w_2,...,w_n\}\)</span></li>
+<li>输入：RNN首先将句子中的每一个词映射成为一个向量，所以可以得到一个向量序列，这个过程叫做<strong>word
+embedding</strong>：<span class="math inline">\(X=\{x_1, x_2, ...,
+x_n\}\)</span></li>
+<li>输出：RNN在时间步t上输出为<span class="math inline">\(h_t\)</span>的隐藏向量hidden state。</li>
+</ol>
+<p>以下图为1-2过程，即由句子序列到向量序列的过程</p>
+<figure>
+<img src="/2024/11/14/Seq2Seq/word-embedding.png" alt="word embedding">
+<figcaption aria-hidden="true">word embedding</figcaption>
+</figure>
+<p>以下图为在时间1、时间2、时间3时输出隐藏向量的过程：</p>
+<figure>
+<img src="/2024/11/14/Seq2Seq/encoder.gif" alt="alt text">
+<figcaption aria-hidden="true">alt text</figcaption>
+</figure>
+<h3 id="decoder">decoder</h3>
+<h2 id="seq2seq代码实现">Seq2Seq代码实现</h2>
+</article>
+                        </main>
+                        
+                        
+                        
                     </div>
                 </div>
-                <hr class="row">
-                
-                <div class="paginator">
-                    <div class="row">
+                <div class="row mt-5 mb-5">
+                    <div class="col-12">
+                        <div class="row">
     <div class="col">
         <nav aria-label="paginator" class="paginator">
             <ul class="pagination d-none d-md-flex pagination-lg justify-content-center">
                 <li class="page-item  disabled ">
                     <a class="page-link"
-                        href="/"
+                        href=""
                         aria-label="Previous">
                         <span aria-hidden="true">&laquo;
-                            Newer</span>
+                            No more</span>
                         <span class="sr-only">Previous</span>
                     </a>
                 </li>
-                <li class="page-item  disabled ">
+                <li class="page-item ">
                     <a class="page-link"
-                        href="/"
+                        href="/2024/09/17/Deep-learning-steps/"
                         aria-label="Next">
                         <span
-                            aria-hidden="true">Older
+                            aria-hidden="true">深度学习基本步骤
                             &raquo;</span>
                         <span class="sr-only">Next</span>
                     </a>
@@ -108,19 +153,19 @@
             <ul class="pagination d-md-none justify-content-center">
                 <li class="page-item  disabled ">
                     <a class="page-link"
-                        href="/"
+                        href=""
                         aria-label="Previous">
                         <span aria-hidden="true">&laquo;
-                            Newer</span>
+                            No more</span>
                         <span class="sr-only">Previous</span>
                     </a>
                 </li>
-                <li class="page-item  disabled ">
+                <li class="page-item ">
                     <a class="page-link"
-                        href="/"
+                        href="/2024/09/17/Deep-learning-steps/"
                         aria-label="Next">
                         <span
-                            aria-hidden="true">Older
+                            aria-hidden="true">深度学习基本步骤
                             &raquo;</span>
                         <span class="sr-only">Next</span>
                     </a>
@@ -132,93 +177,25 @@
 
 
 
-                </div>
-            </div>
-            <div class="col-md-3 mt-3">
-                
-
-    <div class="row">
-    <div class="col">
-        <h6>FEATURED TAGS</h6>
-        <div class="tags">
-            <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/pytorch/" rel="tag">pytorch</a><span class="tag-list-count">3</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLM/" rel="tag">LLM</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LoRA/" rel="tag">LoRA</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Fine-Tuning/" rel="tag">Fine-Tuning</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/paper/" rel="tag">paper</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hexo/" rel="tag">hexo</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/pipeline/" rel="tag">pipeline</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/deep-learning/" rel="tag">deep-learning</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/transformer/" rel="tag">transformer</a><span class="tag-list-count">1</span></li></ul>
-        </div>
-    </div>
-</div>
-    <hr class="row">
-
-
-
-    <div class="row">
-    <div class="col">
-        <h6>ABOUT ME</h6>
-        <div class="row">
-            <div class="col">
-                <div class="row justify-content-center">
-                    <div class="col-8 text-center">
-                        <img src="https://avatars.githubusercontent.com/u/30166097?s=96&v=4" alt="alt" class="img-thumbnail">
                     </div>
                 </div>
-                <div class="row mt-2">
-                    <div class="col text-center">
-                        <p class="text-muted"></p>
+                <div class="row">
+                    <div class="col-12">
+                        <div id="vcomment"></div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="mt-2 sidebar-socialmedia">
-            <div class="row">
-    <div class="col text-center">
-        <ul class="list-inline">
-            
-            <li class="list-inline-item">
-                
-                <a target="_blank" rel="noopener" href="https://github.com/zhanghaopai">
-                    <span class="fa-stack fa-2x icon-link">
-                        <i class="fas fa-circle fa-stack-2x"></i>
-                        <i class="fab fa-github fa-stack-1x fa-inverse"></i>
-                    </span>
-                </a>
-                
-            </li>
-            
-        </ul>
-    </div>
-</div>
-
-        </div>
-    </div>
-</div>
-    <hr class="row">
-
-
-    <div class="row">
-    <div class="col">
-        <h6>CONTACT</h6>
-        <address>
-            <span class="text-muted">Dr.</span>
-            <strong>Patrick</strong>
-            <span class="text-muted">Director</span>
-            <br>
-            
-        </address>
-    </div>
-</div>
-    <hr class="row">
-
-
-    <div class="row">
-    <div class="col">
-        <h6>ARCHIVES</h6>
-        <div class="archive">
-            <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/">2024</a></li></ul>
-        </div>
-    </div>
-</div>
-    <hr class="row">
-
-
-
+            <div class="col-md-3">
+                <div class="container pt-4 page-sidebar">
+                    
+                    <hr class="row">
+                    <div class="row toc-container">
+                        <div class="col-12">
+                            <h6>NAVIGATION</h6>
+                            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#seq2seq%E6%9E%B6%E6%9E%84"><span class="toc-text">Seq2Seq架构</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#seq2seq%E7%AE%80%E4%BB%8B"><span class="toc-text">Seq2Seq简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#seq2seq%E6%9E%B6%E6%9E%84-1"><span class="toc-text">Seq2Seq架构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#seq2seq%E7%BB%86%E8%8A%82"><span class="toc-text">Seq2Seq细节</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#encoder"><span class="toc-text">Encoder</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#decoder"><span class="toc-text">decoder</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#seq2seq%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="toc-text">Seq2Seq代码实现</span></a></li></ol></li></ol>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -320,6 +297,6 @@ $(document).ready(function() {
 </script>
 
 
+    
 </body>
-
 </html>
