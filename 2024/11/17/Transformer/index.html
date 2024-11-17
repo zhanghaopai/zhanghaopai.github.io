@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <link rel="shortcut icon" href="http://some.url/to/favicon.ico">
+    <title>Transformer-Patrick's Blogs</title>
+
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/academicons/1.8.6/css/academicons.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.9.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/katex.min.css">
+    
+
+    
+<link rel="stylesheet" href="/css/adagio.css">
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+<body>
+    <div class="container-fluid">
+    <nav class="nav">
+        <div class="collapse navbar-collapse" id="navbar-sm">
+            
+        </div>
+    </nav>
+</div>
+
+<div class="d-flex d-md-none" style="width: 100%; background-color: #e9ecef">
+    
+    <nav class="navbar ml-auto">
+        <a class="navbar-brand" href="/">
+            
+            Patrick
+            
+        </a>
+    </nav>
+</div>
+
+
+<div class="container d-none d-md-block my-navbar">
+    <nav class="navbar navbar-expand-sm navbar-light bg-transparent">
+        <a class="navbar-brand " href="/">
+            
+            Patrick
+            
+        </a>
+        
+    </nav>
+</div>
+
+
+
+
+    <div class="jumbotron jumbotron-fluid">
+    <div class="container">
+        
+        <h1 class="mt-4 article-title page-title">Transformer</h1>
+        
+        <p class="lead text-gray mt-3">By Anonymous; Published on 2024-11-17</p>
+        
+        <div class="tags">
+            <ul class="tag-list">
+                
+                <li class="tag-list-item">
+                    <a class="tag-list-link" href="/tags/Transformer/">Transformer</a>
+                </li>
+                
+            </ul>
+        </div>
+        
+    </div>
+</div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9 pt-2">
+                <div class="row">
+                    <div class="col-12">
+                        <main>
+                            <article class="article-text page-content"><h1 id="transformer">Transformer</h1>
+<h2 id="为何transformer">为何Transformer？</h2>
+<p>在Attention一节中，我们讲述了注意力机制为循环神经网络带来的优点。那么有没有一种网络直接基于注意力机制进行构造，而不再依赖RNN呢？该网络结构就是Transformer！</p>
+<p>Transformer模型在2017年google提出，直接基于Self-Attention结构，取代了之前NLP任务中常用的RNN结构。</p>
+<p>与RNN这类神经网络结构相比，Transformer一个巨大的优点是：模型在处理序列输入时，可以对整个序列输入进行并行计算，不需要按照时间步循环递归处理输入序列。</p>
+<h2 id="transformer宏观结构">Transformer宏观结构</h2>
+<blockquote>
+<p>以机器翻译为例，来讲解Transformer这种特殊的Seq2Seq模型。</p>
+</blockquote>
+<p><img src="/2024/11/17/Transformer/overview.png"></p>
+<p>我们可以看到，Transformer由编码部分和解码部分组成，其中编码部分由6层编码器堆叠而成，解码器由6个解码器组成。每层编码器和解码器的结构是一样的，不同编码器和解码器网络结构<strong>不共享参数</strong>。</p>
+<h3 id="编码器">编码器</h3>
+<p><img src="/2024/11/17/Transformer/encoder.png"></p>
+<p>单层encoder由以下两部分组成： 1. Self-Attention层 2. Feed Forward
+Neural Network 前馈神经网络</p>
+<p>编码器的输入文本序列<span class="math inline">\(\{w_1,w_2,...,w_n\}\)</span>最开始需要经过embedding转换，得到每个单词的向量，将文本序列转换为向量序列<span class="math inline">\(\{x_1,x_2,...,x_n\}\)</span>，其中<span class="math inline">\(x_i\)</span>使一个维度为<span class="math inline">\(d\)</span>的向量。所有向量经过Self-Attention神经网络层进行编码和信息交互得到<span class="math inline">\(\{h_1,h_2,...,h_n\}\)</span>。Self-Attention层在处理每一个词向量的时候，不仅会使用这个词本身的信息，也会使用句子中其他词的信息。</p>
+<p>Self-Attention层的输出会经过前馈神经网络得到新的<span class="math inline">\(\{x_1, x_2,..,x_n\}\)</span>，依旧是<span class="math inline">\(n\)</span>个维度为<span class="math inline">\(d\)</span>的向量。这些向量将被送入下一层encoder，继续相同的操作。</p>
+<h3 id="解码器">解码器</h3>
+<p><img src="/2024/11/17/Transformer/decoder.png"></p>
+<p>与编码器对应，如下图，解码器在编码器的self-attention和FFNN中间插入了一个Encoder-Decoder
+Attention层，这个层帮助解码器聚焦于输入序列最相关的部分。</p>
+<h2 id="transformer结构细节">Transformer结构细节</h2>
+<h3 id="输入处理">输入处理</h3>
+<h4 id="词向量">词向量</h4>
+<p>和常见的NLP任务一样，我们首先会用词嵌入算法，将输入文本序列中的每一个词转换为词向量。实际中词向量一般为256维或者512维，这里我们使用4维词向量表示。</p>
+<p>如下图，假设我们的输入文本包含了3个词，那么每个词可以通过词嵌入算法得到一个4维向量，于是整个输入被转换为一个向量序列。</p>
+<p><img src="/2024/11/17/Transformer/embedding.png"></p>
+<p>在实际应用中，我们通常会给模型输入多个句子，如果每个句子的长度不一样，我们会选择一个合适的长度，作为输入文本的最大长度。如果句子达不到长度，那么就先填充特殊字符[padding]，如果句子超出这个长度，则做截断。</p>
+<h4 id="位置向量">位置向量</h4>
+<blockquote>
+<p>输入序列每个单词被转换为词向量表示还加上<strong>位置向量</strong>来表示该词的最终向量表示。</p>
+</blockquote>
+<p><img src="/2024/11/17/Transformer/position.png"></p>
+<p>Transformer模型对每个输入的词向量都加上了一个位置向量，可以得到新向量。新向量有助于确定每个单词的位置特征，或者句子中不同单词之间的距离特征，可以为模型提供更多有意义的信息。</p>
+<p><strong>那么如何编码呢？</strong></p>
+<p><span class="math display">\[
+PE_{(pos,2i)} = sin(pos / 10000^{2i/d})
+\]</span></p>
+<p><span class="math display">\[
+PE_{(pos,2i+1)} = cos(pos / 10000^{2i/d})  
+\]</span></p>
+<p>上面表达式中的<span class="math inline">\(pos\)</span>表示<strong>词</strong>的位置，<span class="math inline">\(d\)</span>表示位置<strong>向量</strong>的维度，<span class="math inline">\(i\)</span>表示位置向量的第<span class="math inline">\(i\)</span>维（<span class="math inline">\(1 \leq i
+\leq d\)</span>）</p>
+<p><img src="/2024/11/17/Transformer/position-graphic.png"></p>
+<p>上图为100词，词向量的第4-7维的位置编码图像。</p>
+<h3 id="encoder">Encoder</h3>
+<p>文本序列经过输入处理之后得到了一个向量序列，这个向量序列将被送入编码器。</p>
+<p>下面展示了向量序列进入Encoder编码器的过程。</p>
+<p><img src="/2024/11/17/Transformer/encoder-detail.png"></p>
+<h4 id="self-attention">Self-Attention</h4>
+<blockquote>
+<p>The animal didn't cross the street because it was too tired</p>
+<p>这个句子中的 it 是一个指代词，那么 it 指的是什么呢？它是指 animal
+还是street？</p>
+</blockquote>
+<p>引入Self-Attention机制能够让模型把it和animal关联起来。同样的，当模型处理句子中其他词时，Self
+Attention机制也可以使得模型不仅仅关注当前位置的词，还会关注句子中其他位置的相关的词，进而可以更好地理解当前位置的词。</p>
+<p>下面我们将更加详细的介绍自注意力机制。</p>
+<p>假设一句话包含两个单词：<code>Thinking Machines</code>。自注意力的一种理解是：<code>Thinking-Thinking</code>，<code>Thinking-Machines</code>，<code>Machines-Thinking</code>，<code>Machines-Machines</code>，共<span class="math inline">\(2^2\)</span>种两-两attention。</p>
+<p>我们通过以下6个步骤，进行自注意力计算：</p>
+<ol type="1">
+<li><p><strong>线性变换，计算query向量</strong>：Query向量: <span class="math inline">\(q_1, q_2\)</span>，Key向量: <span class="math inline">\(k_1, k_2\)</span>，Value向量: <span class="math inline">\(v_1,
+v_2\)</span>。这3个向量是<strong>词向量分别和3个参数矩阵相乘</strong>得到的，而这个矩阵也是是模型要学习的参数。
+<img src="/2024/11/17/Transformer/query.png"></p></li>
+<li><p><strong>计算注意力得分</strong>：假设我们现在计算第一个词Thinking
+的Attention Score（注意力分数），需要根据Thinking
+对应的词向量，对句子中的其他词向量都计算一个分数。这些分数决定了我们在编码Thinking这个词时，需要对句子中其他位置的词向量的权重。
+<img src="/2024/11/17/Transformer/score.png"></p></li>
+<li><p>把每个分数除以 <span class="math inline">\(\sqrt{d}\)</span>，<span class="math inline">\(d\)</span>是Key向量的维度。你也可以除以其他数，除以一个数是为了在反向传播时，求梯度时更加稳定。</p></li>
+<li><p>归一化：接着把这些分数经过一个Softmax函数，Softmax可以将分数归一化，这样使得分数都是正数并且加起来等于1，
+如下图所示。
+这些分数决定了Thinking词向量，对其他所有位置的词向量分别有多少的注意力。
+<img src="/2024/11/17/Transformer/softmax.png"></p></li>
+<li><p><strong>分数xValue</strong>：得到每个词向量的分数后，将分数分别与对应的Value向量相乘。这种做法背后的直觉理解就是：对于分数高的位置，相乘后的值就越大，我们把更多的注意力放到了它们身上；对于分数低的位置，相乘后的值就越小，这些位置的词可能是相关性不大的。</p></li>
+<li><p><strong>求和</strong>：把第5步得到的Value向量相加，就得到了Self
+Attention在当前位置（这里的例子是第1个位置）对应的输出。</p></li>
+</ol>
+<p>通过以上6步，我们可以最终得出Thinking的注意力输出，这个过程中Thinking的注意力同时注意到了<code>Thinking-Thinking</code>，<code>Thinking-Machines</code>。</p>
+<h4 id="多头注意力机制">多头注意力机制</h4>
+<p>Transformer
+的论文通过增加多头注意力机制，进一步完善了Self-Attention。这种机制从如下两个方面增强了attention层的能力。</p>
+<ul>
+<li>它扩展了模型关注不同位置的能力</li>
+<li>多头注意力机制赋予attention层多个“子表示空间”</li>
+</ul>
+<p>经过以下3个步骤，可以计算多头注意力：</p>
+<ol type="1">
+<li><p>多头注意力机制会有<strong>多组</strong><span class="math inline">\(W^Q,W^K,W^V\)</span>​的权重矩阵。每一组注意力的权重矩阵都是随机初始化的，但经过训练之后，每一组注意力的权重<span class="math inline">\(W^Q,W^K,W^V\)</span>​可以把输入的向量映射到一个对应的“子表示空间”。以下图片有2组Q、K、V。
+<img src="/2024/11/17/Transformer/multihead.png"></p></li>
+<li><p>计算多组Z矩阵。（在 Transformer 的论文中，使用了 8 组注意力）
+<img src="/2024/11/17/Transformer/multihead-2.png"></p></li>
+<li><p>拼接所有Z矩阵，所以我们直接把8个子矩阵拼接起来得到一个大的矩阵，然后和另一个权重矩阵<span class="math inline">\(W^O\)</span>相乘做一次变换，映射到前馈神经网络层所需要的维度。这个矩阵会输入到FFNN
+(Feed Forward Neural Network)层。</p></li>
+</ol>
+<h4 id="encoder总结">Encoder总结</h4>
+<p><img src="/2024/11/17/Transformer/self-attention.png"></p>
+<h3 id="decoder">Decoder</h3>
+<p><img src="/2024/11/17/Transformer/decoder.gif"></p>
+<blockquote>
+<p>Self-Attention 和 RNN的区别</p>
+<ol type="1">
+<li>RNN 在处理序列中的一个词时，会考虑句子前面的词传过来的hidden
+state，而hidden state就包含了前面的词的信息。</li>
+<li>而Self
+Attention机制值得是，当前词会直接关注到自己句子中前后相关的<strong>所有</strong>词语。</li>
+</ol>
+</blockquote>
+</article>
+                        </main>
+                        
+                        
+                        
+                    </div>
+                </div>
+                <div class="row mt-5 mb-5">
+                    <div class="col-12">
+                        <div class="row">
+    <div class="col">
+        <nav aria-label="paginator" class="paginator">
+            <ul class="pagination d-none d-md-flex pagination-lg justify-content-center">
+                <li class="page-item  disabled ">
+                    <a class="page-link"
+                        href=""
+                        aria-label="Previous">
+                        <span aria-hidden="true">&laquo;
+                            No more</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                </li>
+                <li class="page-item ">
+                    <a class="page-link"
+                        href="/2024/11/15/Attention/"
+                        aria-label="Next">
+                        <span
+                            aria-hidden="true">Attention
+                            &raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </li>
+            </ul>
+            <ul class="pagination d-md-none justify-content-center">
+                <li class="page-item  disabled ">
+                    <a class="page-link"
+                        href=""
+                        aria-label="Previous">
+                        <span aria-hidden="true">&laquo;
+                            No more</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                </li>
+                <li class="page-item ">
+                    <a class="page-link"
+                        href="/2024/11/15/Attention/"
+                        aria-label="Next">
+                        <span
+                            aria-hidden="true">Attention
+                            &raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div id="vcomment"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="container pt-4 page-sidebar">
+                    
+                    <hr class="row">
+                    <div class="row toc-container">
+                        <div class="col-12">
+                            <h6>NAVIGATION</h6>
+                            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#transformer"><span class="toc-text">Transformer</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BD%95transformer"><span class="toc-text">为何Transformer？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#transformer%E5%AE%8F%E8%A7%82%E7%BB%93%E6%9E%84"><span class="toc-text">Transformer宏观结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%96%E7%A0%81%E5%99%A8"><span class="toc-text">编码器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A7%A3%E7%A0%81%E5%99%A8"><span class="toc-text">解码器</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#transformer%E7%BB%93%E6%9E%84%E7%BB%86%E8%8A%82"><span class="toc-text">Transformer结构细节</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BE%93%E5%85%A5%E5%A4%84%E7%90%86"><span class="toc-text">输入处理</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%8D%E5%90%91%E9%87%8F"><span class="toc-text">词向量</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%8D%E7%BD%AE%E5%90%91%E9%87%8F"><span class="toc-text">位置向量</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#encoder"><span class="toc-text">Encoder</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#self-attention"><span class="toc-text">Self-Attention</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A4%9A%E5%A4%B4%E6%B3%A8%E6%84%8F%E5%8A%9B%E6%9C%BA%E5%88%B6"><span class="toc-text">多头注意力机制</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#encoder%E6%80%BB%E7%BB%93"><span class="toc-text">Encoder总结</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#decoder"><span class="toc-text">Decoder</span></a></li></ol></li></ol></li></ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+    <div class="jumbotron jumbotron-fluid mb-0">
+        <div class="container-fluid">
+            <div class="col text-center">
+                <div class="bottom-social">
+                    <div class="row">
+    <div class="col text-center">
+        <ul class="list-inline">
+            
+            <li class="list-inline-item">
+                
+                <a target="_blank" rel="noopener" href="https://github.com/zhanghaopai">
+                    <span class="fa-stack fa-2x icon-link">
+                        <i class="fas fa-circle fa-stack-2x"></i>
+                        <i class="fab fa-github fa-stack-1x fa-inverse"></i>
+                    </span>
+                </a>
+                
+            </li>
+            
+        </ul>
+    </div>
+</div>
+
+                </div>
+                <p class="copyright text-muted">
+                    Copyright &copy; 
+                    <br>
+                    Theme: <a target="_blank" rel="noopener" href="https://github.com/Hanlin-Dong/hexo-theme-adagio">Adagio</a> - A <a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> theme made with love by <a target="_blank" rel="noopener" href="http://www.hanlindong.com">Hanlin Dong</a>.
+                    <br>
+                    Thanks for coming!
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.9.0/js/all.min.js"></script>
+     
+    <script defer src="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/katex.min.js"></script>
+    <script defer src="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.11/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+    
+
+
+
+<script src="/js/av.min.js"></script>
+
+
+<script src="/js/valine.min.js"></script>
+
+
+<script src="/js/applause-easy.js"></script>
+
+<script>
+$(document).ready(function() {
+    new ApplauseEasy({
+        id: 'applause-easy',
+        appId: "xxxxxxxxxx",
+        appKey: "xxxxxxxxxx",
+        img_src: "http://img.hanlindong.com/blog/site/clap.png",
+        img_width: "50px",
+        img_height: "50px",
+        trigger_every: 20,
+        trigger_fun: () => {alert("Thanks!");}
+    })
+})
+</script>
+
+<script src="/js/adagio.js"></script>
+
+
+
+<script>
+    var _hmt = _hmt || [];
+    (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?123456789";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-11111111-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+        dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'UA-11111111-1');
+</script>
+
+
+    
+</body>
+</html>
